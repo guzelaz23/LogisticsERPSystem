@@ -42,7 +42,19 @@ def shipment_add(request):
             if not shipment.customer.is_active:
                 shipment.customer.is_active = True
                 shipment.customer.save(update_fields=['is_active'])
-            messages.success(request, f"Shipment created! AWB: {shipment.awb_number}")
+            # Auto-create invoice immediately so finance can confirm payment right away
+            invoice = Invoice(
+                shipment=shipment,
+                customer=shipment.customer,
+                subtotal=shipment.shipping_cost,
+                ppn_rate=11.00,
+                ppn_amount=shipment.ppn_amount,
+                total_amount=shipment.total_cost,
+                due_date=timezone.now().date() + timedelta(days=14),
+                issued_by=request.user,
+            )
+            invoice.save()
+            messages.success(request, f"Shipment {shipment.awb_number} created & invoice {invoice.invoice_number} generated.")
             return redirect('shipment_detail', pk=shipment.pk)
     else:
         form = ShipmentForm()
@@ -163,10 +175,6 @@ SERVICE_REVENUE_MAP = {'REG': '4100', 'EXP': '4200', 'SDS': '4300', 'CAR': '4400
 @group_required('FINANCE')
 def generate_invoice(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
-
-    if shipment.status == 'PENDING':
-        messages.error(request, f"Cannot generate invoice. Shipment status is still '{shipment.get_status_display()}'. Must be at least Picked Up.")
-        return redirect('shipment_detail', pk=pk)
 
     if hasattr(shipment, 'invoice'):
         messages.warning(request, f"Invoice already exists for {shipment.awb_number}")
