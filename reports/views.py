@@ -5,8 +5,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from datetime import date as _date
 from django.db.models import Count, Sum
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, ExtractYear, ExtractMonth
 from shipments.models import Shipment
 from billing.models import Invoice
 
@@ -83,12 +84,26 @@ def revenue_report(request):
     # subtotal IS the net service revenue (excl. VAT); PPN is a liability, not a revenue deduction
     net_revenue     = total_revenue
 
-    monthly_data = invoices.annotate(month=TruncMonth('created_at')).values('month').annotate(
+    monthly_raw = invoices.annotate(
+        yr=ExtractYear('created_at'),
+        mo=ExtractMonth('created_at'),
+    ).values('yr', 'mo').annotate(
         shipments_count=Count('id'),
         revenue=Sum('subtotal'),
         ppn=Sum('ppn_amount'),
         net=Sum('subtotal'),
-    ).order_by('-month')
+    ).order_by('yr', 'mo')
+
+    monthly_data = [
+        {
+            'month': _date(item['yr'], item['mo'], 1),
+            'shipments_count': item['shipments_count'],
+            'revenue': item['revenue'] or 0,
+            'ppn': item['ppn'] or 0,
+            'net': item['net'] or 0,
+        }
+        for item in monthly_raw
+    ]
 
     if export == 'csv':
         response = HttpResponse(content_type='text/csv')
@@ -106,8 +121,12 @@ def revenue_report(request):
         writer.writerow(['TOTAL', total_shipments, total_revenue, total_ppn, net_revenue])
         return response
 
-    chart_months  = [item['month'].strftime('%b %Y') for item in reversed(list(monthly_data))]
-    chart_revenue = [float(item['revenue']) for item in reversed(list(monthly_data))]
+    # Chart: oldest → newest (ascending, already ordered)
+    chart_months  = [item['month'].strftime('%b %Y') for item in monthly_data]
+    chart_revenue = [float(item['revenue']) for item in monthly_data]
+
+    # Template table: newest → oldest
+    monthly_data  = list(reversed(monthly_data))
 
     service_data = invoices.values('shipment__service_type').annotate(total=Sum('subtotal'))
     pie_labels   = [item['shipment__service_type'] for item in service_data]
