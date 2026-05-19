@@ -5,8 +5,8 @@
 {% block content %}
 <div class="mb-5 flex items-center justify-between">
     <div>
-        <h1 class="text-xl font-extrabold text-slate-800">Customers</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Manage customer accounts and data</p>
+        <h1 class="text-xl font-bold text-gray-900">Customers</h1>
+        <p class="text-sm text-gray-500 mt-0.5">Manage customer accounts and data</p>
     </div>
     <a href="{% url 'customer_add' %}" class="btn btn-orange">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -15,11 +15,20 @@
 </div>
 
 <div class="card">
-    <div class="p-4 border-b border-slate-100 flex items-center gap-3">
-        <form method="get" class="flex items-center gap-2 flex-1">
-            <div class="search-wrap flex-1 max-w-xs">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <div>
+                <p class="text-sm font-semibold text-gray-900">Customer Accounts</p>
+                <p class="text-xs text-gray-400">Manage customer data and status</p>
+            </div>
+        </div>
+        <form method="get" class="flex items-center gap-2">
+            <div class="search-wrap">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"></path></svg>
-                <input type="text" name="q" value="{{ query }}" placeholder="Search code or name…" class="form-input">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search code or name…" class="form-input w-56">
             </div>
             <button type="submit" class="btn btn-primary btn-sm">Search</button>
             {% if query %}<a href="{% url 'customer_list' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}

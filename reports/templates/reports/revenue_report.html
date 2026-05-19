@@ -34,7 +34,10 @@
 <div class="mb-5 flex items-center justify-between no-print">
     <div>
         <h1 class="text-xl font-extrabold text-slate-800">Revenue Report</h1>
-        <p class="text-sm text-slate-500 mt-0.5">Revenue analysis and financial performance</p>
+        <p class="text-sm text-slate-500 mt-0.5">Revenue from shipments — excl. expenses.
+            <a href="{% url 'income_statement' %}{% if start_date %}?start_date={{ start_date }}{% if end_date %}&end_date={{ end_date }}{% endif %}{% elif end_date %}?end_date={{ end_date }}{% endif %}"
+               class="text-blue-600 hover:underline font-medium">View Income Statement (revenue − expense) →</a>
+        </p>
     </div>
     <div class="flex gap-2">
         <a href="?{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}&{% endif %}export=csv"

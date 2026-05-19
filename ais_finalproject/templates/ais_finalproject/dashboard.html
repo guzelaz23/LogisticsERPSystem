@@ -8,8 +8,8 @@
 <!-- Page Header -->
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-extrabold text-slate-800">Operational Dashboard</h1>
-        <p class="text-sm text-slate-500 mt-0.5">
+        <h1 class="text-xl font-bold text-gray-900">Operational Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-0.5">
             Financial overview &amp; shipment activity — {{ today|date:"d F Y" }}
         </p>
     </div>
@@ -120,7 +120,7 @@
                 <h3 class="text-sm font-bold text-slate-700">Revenue Trend</h3>
                 <p class="text-xs text-slate-400 mt-0.5">Last 6 months (delivered shipments)</p>
             </div>
-            <a href="{% url 'revenue_report' %}" class="text-xs text-orange-500 hover:text-orange-700 font-semibold">
+            <a href="{% url 'revenue_report' %}" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
                 Full Report →
             </a>
         </div>
@@ -131,7 +131,7 @@
     <div class="card p-5">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-slate-700">Invoice Status</h3>
-            <a href="{% url 'invoice_list' %}" class="text-xs text-orange-500 font-semibold">View All →</a>
+            <a href="{% url 'invoice_list' %}" class="text-xs text-blue-600 font-semibold">View All →</a>
         </div>
 
         <div class="space-y-3">
@@ -246,7 +246,7 @@
     <div class="card p-5">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-bold text-slate-700">Recent Shipments</h3>
-            <a href="{% url 'shipment_list' %}" class="text-xs text-orange-500 font-semibold">View All →</a>
+            <a href="{% url 'shipment_list' %}" class="text-xs text-blue-600 font-semibold">View All →</a>
         </div>
         <div class="space-y-2">
             {% for shipment in recent_shipments %}
@@ -282,8 +282,8 @@ document.addEventListener('DOMContentLoaded', function () {
             datasets: [{
                 label: 'Revenue (Rp)',
                 data: {{ chart_data|safe }},
-                backgroundColor: 'rgba(249,115,22,0.12)',
-                borderColor: '#f97316',
+                backgroundColor: 'rgba(37,99,235,0.08)',
+                borderColor: '#2563EB',
                 borderWidth: 2,
                 borderRadius: 6,
                 borderSkipped: false,

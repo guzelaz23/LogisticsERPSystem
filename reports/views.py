@@ -1,9 +1,10 @@
 import csv
 import json
 from decimal import Decimal
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
 from shipments.models import Shipment
@@ -523,3 +524,21 @@ def journal_entries(request):
     entries   = paginator.get_page(page)
 
     return render(request, 'reports/journal_entries.html', {'entries': entries})
+
+
+@login_required
+def delete_journal_entry(request, pk):
+    from general_ledger.models import JournalEntry
+
+    if not request.user.is_superuser:
+        messages.error(request, "Only administrators can delete journal entries.")
+        return redirect('journal_entries')
+
+    if request.method != 'POST':
+        return redirect('journal_entries')
+
+    entry = get_object_or_404(JournalEntry, pk=pk)
+    entry_number = entry.entry_number
+    entry.delete()
+    messages.success(request, f"Journal entry {entry_number} has been deleted.")
+    return redirect('journal_entries')

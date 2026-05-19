@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.db import models
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User
 
@@ -109,16 +109,20 @@ class GeneralLedger(models.Model):
         ordering = ['account__account_code']
 
 
-@receiver(post_save, sender=JournalEntryLine)
-def _sync_general_ledger(sender, instance, **kwargs):
-    agg = JournalEntryLine.objects.filter(account=instance.account).aggregate(
+def _resync_gl(account):
+    agg = JournalEntryLine.objects.filter(account=account).aggregate(
         debit=Coalesce(Sum('debit_amount'), Decimal('0')),
         credit=Coalesce(Sum('credit_amount'), Decimal('0')),
     )
     GeneralLedger.objects.update_or_create(
-        account=instance.account,
-        defaults={
-            'debit_total': agg['debit'],
-            'credit_total': agg['credit'],
-        },
+        account=account,
+        defaults={'debit_total': agg['debit'], 'credit_total': agg['credit']},
     )
+
+@receiver(post_save, sender=JournalEntryLine)
+def _sync_gl_on_save(sender, instance, **kwargs):
+    _resync_gl(instance.account)
+
+@receiver(post_delete, sender=JournalEntryLine)
+def _sync_gl_on_delete(sender, instance, **kwargs):
+    _resync_gl(instance.account)

@@ -8,7 +8,10 @@
       "Bash(python manage.py shell -c \"from general_ledger.models import JournalEntry; print\\(JournalEntry.objects.filter\\(reference__in=['INV-202605-000003','INV-202605-000004']\\).values_list\\('entry_number','description'\\)\\)\")",
       "Bash(\"D:\\\\College 2nd Year\\\\SEMESTER 2\\\\AIS_project\\\\venv\\\\Scripts\\\\python.exe\" -c \"import ast; ast.parse\\(open\\('reports/views.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
       "Bash(\"D:\\\\College 2nd Year\\\\SEMESTER 2\\\\AIS_project\\\\venv\\\\Scripts\\\\python.exe\" manage.py check --deploy)",
-      "Bash(\"D:\\\\College 2nd Year\\\\SEMESTER 2\\\\AIS_project\\\\venv\\\\Scripts\\\\python.exe\" -c \"import ast; ast.parse\\(open\\('billing/forms.py'\\).read\\(\\)\\); print\\('OK'\\)\")"
+      "Bash(\"D:\\\\College 2nd Year\\\\SEMESTER 2\\\\AIS_project\\\\venv\\\\Scripts\\\\python.exe\" -c \"import ast; ast.parse\\(open\\('billing/forms.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"ERP logistics SaaS dashboard professional clean\" --design-system -p \"SAP Express\" -f markdown)",
+      "Bash(python manage.py makemigrations shipments)",
+      "Bash(python manage.py migrate shipments)"
     ]
   }
 }
