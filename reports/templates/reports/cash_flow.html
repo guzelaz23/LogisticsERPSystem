@@ -1,0 +1,170 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Cash Flow Statement - SAP Express{% endblock %}
+{% block breadcrumb %}Cash Flow Statement{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .print-only { display: block !important; }
+        .no-print   { display: none  !important; }
+        #sidebar, header, .btn { display: none !important; }
+        .card { box-shadow: none !important; border: 1px solid #ddd !important; }
+        .cf-row, .cf-total, .cf-net { break-inside: avoid; }
+    }
+    .cf-section-head { padding: 10px 16px; font-weight: 700; font-size: 0.8rem; letter-spacing: .1em; text-transform: uppercase; color: white; }
+    .cf-row   { display: flex; justify-content: space-between; padding: 7px 16px; border-bottom: 1px solid #f1f5f9; }
+    .cf-total { display: flex; justify-content: space-between; padding: 9px 16px; font-weight: 700; border-top: 2px solid #e2e8f0; background: #f8fafc; }
+    .cf-net   { display: flex; justify-content: space-between; padding: 12px 16px; font-weight: 800; font-size: 1.05rem; border-top: 3px double #0f2a4a; color: #0f2a4a; }
+</style>
+
+<!-- Print header -->
+<div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">Cash Flow Statement</h3>
+    <p style="font-size:12px; color:#555; margin:2px 0;">Period: {{ period_label }}</p>
+    <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
+    <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
+</div>
+
+<!-- Screen header -->
+<div class="mb-5 flex items-center justify-between no-print">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Cash Flow Statement</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Statement of Cash Flows — SAP Express Logistik</p>
+        <p class="text-xs font-semibold text-orange-600 mt-1">Period: {{ period_label }}</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="?{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}&{% endif %}export=csv"
+           class="btn btn-ghost btn-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Print / PDF
+        </button>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card p-5 mb-5 no-print">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-input" style="width:auto">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-input" style="width:auto">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+</div>
+
+<!-- Cash Flow Statement -->
+<div class="card overflow-hidden mb-5">
+
+    <!-- A. Operating Activities -->
+    <div class="cf-section-head" style="background:#0f2a4a;">A. OPERATING ACTIVITIES</div>
+
+    <div class="cf-row">
+        <span class="text-slate-700">Cash Received from Customers</span>
+        <span class="font-mono text-emerald-700 font-semibold">{{ cash_in|rupiah }}</span>
+    </div>
+    <div class="cf-row">
+        <span class="text-slate-700">Cash Paid for Expenses</span>
+        <span class="font-mono text-red-600 font-semibold">({{ cash_out|rupiah }})</span>
+    </div>
+    <div class="cf-total">
+        <span class="text-slate-800">Net Cash from Operating Activities</span>
+        <span class="font-mono {% if net_cash >= 0 %}text-emerald-700{% else %}text-red-700{% endif %}">
+            {{ net_cash|rupiah }}
+        </span>
+    </div>
+
+    <!-- B. Investing Activities -->
+    <div class="cf-section-head mt-1" style="background:#1e3a5f;">B. INVESTING ACTIVITIES</div>
+    <div class="cf-row">
+        <span class="text-slate-400 italic text-sm">No investing activities recorded</span>
+        <span class="font-mono text-slate-400">Rp 0</span>
+    </div>
+    <div class="cf-total">
+        <span>Net Cash from Investing Activities</span>
+        <span class="font-mono">Rp 0</span>
+    </div>
+
+    <!-- C. Financing Activities -->
+    <div class="cf-section-head mt-1" style="background:#374151;">C. FINANCING ACTIVITIES</div>
+    <div class="cf-row">
+        <span class="text-slate-400 italic text-sm">No financing activities recorded</span>
+        <span class="font-mono text-slate-400">Rp 0</span>
+    </div>
+    <div class="cf-total">
+        <span>Net Cash from Financing Activities</span>
+        <span class="font-mono">Rp 0</span>
+    </div>
+
+    <!-- Net Change + Balances -->
+    <div class="cf-net">
+        <span>NET CHANGE IN CASH</span>
+        <span class="font-mono {% if net_cash >= 0 %}text-emerald-700{% else %}text-red-700{% endif %}">
+            {{ net_cash|rupiah }}
+        </span>
+    </div>
+    <div class="cf-row" style="background:#f8fafc;">
+        <span class="text-slate-600 font-semibold">Beginning Cash Balance</span>
+        <span class="font-mono font-semibold text-slate-700">{{ beginning_balance|rupiah }}</span>
+    </div>
+    <div class="cf-row" style="background:#f0fdf4; border-top:2px solid #10b981;">
+        <span class="font-bold text-slate-800 text-base">ENDING CASH BALANCE</span>
+        <span class="font-mono font-bold text-emerald-700 text-lg">{{ ending_balance|rupiah }}</span>
+    </div>
+</div>
+
+<!-- Transaction Detail -->
+<div class="card overflow-hidden no-print">
+    <div class="px-5 py-3 border-b border-slate-100">
+        <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider">Cash Transaction Detail</h3>
+    </div>
+    <table class="data-table w-full">
+        <thead>
+            <tr>
+                <th class="text-left">Date</th>
+                <th class="text-left">Journal No.</th>
+                <th class="text-left">Description</th>
+                <th class="text-right text-emerald-700">Cash In</th>
+                <th class="text-right text-red-600">Cash Out</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in detail %}
+            <tr>
+                <td class="text-sm text-slate-500">{{ line.journal_entry.entry_date }}</td>
+                <td class="font-mono text-xs text-slate-600">{{ line.journal_entry.entry_number }}</td>
+                <td class="text-sm text-slate-700">{{ line.journal_entry.description }}</td>
+                <td class="text-right font-mono text-sm {% if line.debit_amount %}text-emerald-700 font-semibold{% else %}text-slate-300{% endif %}">
+                    {% if line.debit_amount %}{{ line.debit_amount|rupiah }}{% else %}—{% endif %}
+                </td>
+                <td class="text-right font-mono text-sm {% if line.credit_amount %}text-red-600 font-semibold{% else %}text-slate-300{% endif %}">
+                    {% if line.credit_amount %}{{ line.credit_amount|rupiah }}{% else %}—{% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-8 text-slate-400">No cash transactions for this period.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Print footer -->
+<div style="display:none; margin-top:32px; border-top:1px solid #ccc; padding-top:10px; font-size:11px; color:#666; text-align:center;" class="print-only">
+    SAP Express Logistik — Cash Flow Statement &nbsp;|&nbsp; Period: {{ period_label }} &nbsp;|&nbsp; Printed: {% now "d M Y, H:i" %}
+</div>
+{% endblock %}

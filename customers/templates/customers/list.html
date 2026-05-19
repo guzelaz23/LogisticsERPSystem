@@ -1,0 +1,65 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}Customers - SAP Express{% endblock %}
+{% block breadcrumb %}Customers{% endblock %}
+
+{% block content %}
+<div class="mb-5 flex items-center justify-between">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Customers</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Manage customer accounts and data</p>
+    </div>
+    <a href="{% url 'customer_add' %}" class="btn btn-orange">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        New Customer
+    </a>
+</div>
+
+<div class="card">
+    <div class="p-4 border-b border-slate-100 flex items-center gap-3">
+        <form method="get" class="flex items-center gap-2 flex-1">
+            <div class="search-wrap flex-1 max-w-xs">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"></path></svg>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search code or name…" class="form-input">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Search</button>
+            {% if query %}<a href="{% url 'customer_list' %}" class="btn btn-ghost btn-sm">Clear</a>{% endif %}
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="data-table">
+            <thead><tr>
+                <th>Code</th><th>Name</th><th>Company</th><th>Phone</th><th>City</th><th class="text-center">Status</th><th class="text-center">Action</th>
+            </tr></thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td><span class="font-mono-code text-xs font-semibold text-slate-600">{{ customer.customer_code }}</span></td>
+                    <td class="font-semibold text-slate-800">{{ customer.name }}</td>
+                    <td class="text-sm text-slate-500">{{ customer.company|default:"—" }}</td>
+                    <td class="text-sm text-slate-600">{{ customer.phone }}</td>
+                    <td class="text-sm text-slate-600">{{ customer.city }}</td>
+                    <td class="text-center">
+                        {% if customer.is_active %}<span class="badge badge-active">Active</span>
+                        {% else %}<span class="badge badge-inactive">Inactive</span>{% endif %}
+                    </td>
+                    <td class="text-center"><a href="{% url 'customer_detail' customer.pk %}" class="btn btn-ghost btn-sm">View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center py-12 text-slate-400">No customers found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if customers.paginator.num_pages > 1 %}
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-xs text-slate-400">Page {{ customers.number }} of {{ customers.paginator.num_pages }}</span>
+        <div class="flex gap-1">
+            {% if customers.has_previous %}<a href="?page=1{% if query %}&q={{ query }}{% endif %}" class="page-btn">«</a><a href="?page={{ customers.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">Prev</a>{% endif %}
+            {% if customers.has_next %}<a href="?page={{ customers.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">Next</a><a href="?page={{ customers.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">»</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

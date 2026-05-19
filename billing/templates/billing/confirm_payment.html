@@ -1,0 +1,109 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}Confirm Payment - SAP Express{% endblock %}
+{% block breadcrumb %}Confirm Payment{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <div class="mb-5">
+        <h1 class="text-xl font-extrabold text-slate-800">Confirm Payment</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Record a payment for an invoice</p>
+    </div>
+    <div class="card p-6">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex items-start gap-2">
+                <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Invoice</label>
+                {{ form.invoice }}
+                {% if form.invoice.errors %}<p class="text-red-500 text-xs mt-1">{{ form.invoice.errors.0 }}</p>{% endif %}
+            </div>
+
+            <!-- Invoice detail preview — shown via JS when an invoice is selected -->
+            <div id="invoice-preview" class="hidden rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <p class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-3">Invoice Details</p>
+                <div class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+                    <span class="text-slate-500">Customer</span><span id="prev-customer" class="font-medium text-slate-800"></span>
+                    <span class="text-slate-500">AWB</span><span id="prev-awb" class="font-mono text-xs text-slate-700"></span>
+                    <span class="text-slate-500">Status</span><span id="prev-status" class="text-slate-700"></span>
+                    <span class="text-slate-500">Invoice Total</span><span id="prev-total" class="font-mono text-slate-700"></span>
+                    <span class="text-slate-500">Already Paid</span><span id="prev-paid" class="font-mono text-emerald-600"></span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
+                    <span class="font-bold text-slate-700 text-sm">Outstanding Balance</span>
+                    <span id="prev-outstanding" class="font-bold text-orange-600 font-mono text-base"></span>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Amount Paid (Rp)</label>
+                {{ form.amount_paid }}
+                {% if form.amount_paid.errors %}<p class="text-red-500 text-xs mt-1">{{ form.amount_paid.errors.0 }}</p>{% endif %}
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Payment Method</label>
+                    {{ form.payment_method }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Payment Date</label>
+                    {{ form.payment_date }}
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Bank Reference (Optional)</label>
+                {{ form.bank_reference }}
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-2">
+                <a href="{% url 'invoice_list' %}" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-success">Save Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+const INVOICES = {{ invoices_json|safe }};
+
+function formatRupiah(amount) {
+    return 'Rp ' + Math.round(amount).toLocaleString('id-ID');
+}
+
+function showPreview(id) {
+    const preview = document.getElementById('invoice-preview');
+    if (!id || !INVOICES[id]) { preview.classList.add('hidden'); return; }
+    const inv = INVOICES[id];
+    document.getElementById('prev-customer').textContent    = inv.customer;
+    document.getElementById('prev-awb').textContent         = inv.awb;
+    document.getElementById('prev-status').textContent      = inv.status;
+    document.getElementById('prev-total').textContent       = formatRupiah(inv.total_amount);
+    document.getElementById('prev-paid').textContent        = formatRupiah(inv.already_paid);
+    document.getElementById('prev-outstanding').textContent = formatRupiah(inv.outstanding);
+    preview.classList.remove('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input,select,textarea').forEach(el => el.classList.add('form-input'));
+
+    const invoiceSelect = document.getElementById('id_invoice');
+    const amountInput   = document.getElementById('id_amount_paid');
+
+    if (invoiceSelect) {
+        // On change: update preview and auto-fill outstanding amount
+        invoiceSelect.addEventListener('change', function () {
+            showPreview(this.value);
+            const inv = INVOICES[this.value];
+            if (inv && amountInput) amountInput.value = inv.outstanding.toFixed(2);
+        });
+
+        // On page load: show preview if already pre-selected (from invoice detail link)
+        if (invoiceSelect.value) showPreview(invoiceSelect.value);
+    }
+});
+</script>
+{% endblock %}

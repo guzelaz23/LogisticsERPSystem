@@ -1,0 +1,158 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Balance Sheet - SAP Express{% endblock %}
+{% block breadcrumb %}Balance Sheet{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .print-only { display: block !important; }
+        .no-print   { display: none  !important; }
+        #sidebar, header, .btn { display: none !important; }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            break-inside: auto !important;
+        }
+        .bs-grid {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 16px !important;
+        }
+        .bs-grid > * { flex: 1 1 0 !important; min-width: 0 !important; }
+        .bs-row, .bs-total { break-inside: avoid; }
+        .balanced-badge { display: none !important; }
+        .balanced-print { display: block !important; }
+    }
+    .bs-section-head { padding: 10px 16px; font-weight: 700; font-size: 0.8rem; letter-spacing: .1em; text-transform: uppercase; color: white; }
+    .bs-row   { display: flex; justify-content: space-between; padding: 6px 16px; border-bottom: 1px solid #f1f5f9; }
+    .bs-total { display: flex; justify-content: space-between; padding: 9px 16px; font-weight: 700; border-top: 2px solid #e2e8f0; background: #f8fafc; }
+</style>
+
+<div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">Balance Sheet</h3>
+    <p style="font-size:12px; color:#555; margin:2px 0;">As of: {{ report_date }}</p>
+    <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
+    <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
+</div>
+
+<div class="card p-5 mb-5 no-print">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">As of Date</label>
+            <input type="date" name="as_of_date" value="{{ as_of_date }}" class="form-input" style="width:auto">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+</div>
+
+<div class="mb-5 flex items-center justify-between no-print">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Balance Sheet</h1>
+        <p class="text-sm text-slate-500 mt-0.5">As of {{ report_date }}</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="?as_of_date={{ as_of_date }}&export=csv" class="btn btn-ghost btn-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+        </a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Print / PDF
+        </button>
+    </div>
+</div>
+
+<div class="mb-4 balanced-badge">
+    {% if is_balanced %}
+    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
+        ✓ Assets = Liabilities + Equity (BALANCED)
+    </span>
+    {% else %}
+    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">
+        ✗ NOT BALANCED — check journal entries
+    </span>
+    {% endif %}
+</div>
+<div class="balanced-print" style="display:none; font-size:11px; color:#555; margin-bottom:12px;">
+    {% if is_balanced %}Statement: Total Assets = Total Liabilities + Equity (BALANCED)
+    {% else %}WARNING: Balance sheet is not balanced — check journal entries{% endif %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 bs-grid">
+    <div class="card overflow-hidden">
+        <div class="bs-section-head" style="background:#0f2a4a;">CURRENT ASSETS</div>
+        {% for gl in current_asset_gl %}
+        <div class="bs-row">
+            <span class="text-slate-700">{{ gl.account_name }}</span>
+            <span class="font-mono">{{ gl.balance|rupiah }}</span>
+        </div>
+        {% endfor %}
+        <div class="bs-total">
+            <span>Total Current Assets</span>
+            <span class="font-mono">{{ total_current_assets|rupiah }}</span>
+        </div>
+
+        <div class="bs-section-head mt-1" style="background:#1e3a5f;">NON-CURRENT ASSETS</div>
+        {% for gl in noncurrent_asset_gl %}
+        <div class="bs-row">
+            <span class="text-slate-700">{{ gl.account_name }}</span>
+            <span class="font-mono">{{ gl.balance|rupiah }}</span>
+        </div>
+        {% empty %}
+        <div class="bs-row">
+            <span class="text-slate-400 italic text-sm">No non-current assets</span>
+            <span class="font-mono text-slate-400">Rp 0</span>
+        </div>
+        {% endfor %}
+        <div class="bs-total">
+            <span>Total Non-Current Assets</span>
+            <span class="font-mono">{{ total_noncurrent_assets|rupiah }}</span>
+        </div>
+
+        <div class="bs-total" style="border-top:2px solid #0f2a4a; background:#eef2f7;">
+            <span class="font-bold text-slate-900">TOTAL ASSETS</span>
+            <span class="font-mono font-bold text-slate-900">{{ total_assets|rupiah }}</span>
+        </div>
+    </div>
+
+    <div class="card overflow-hidden">
+        <div class="bs-section-head" style="background:#f97316;">LIABILITIES</div>
+        {% for gl in liability_gl %}
+        <div class="bs-row">
+            <span class="text-slate-700">{{ gl.account_name }}</span>
+            <span class="font-mono">{{ gl.balance|rupiah }}</span>
+        </div>
+        {% endfor %}
+        <div class="bs-total">
+            <span>Total Liabilities</span>
+            <span class="font-mono">{{ total_liabilities|rupiah }}</span>
+        </div>
+
+        <div class="bs-section-head mt-2" style="background:#0f2a4a;">EQUITY</div>
+        {% for gl in equity_gl %}
+        <div class="bs-row">
+            <span class="text-slate-700">{{ gl.account_name }}</span>
+            <span class="font-mono">{{ gl.balance|rupiah }}</span>
+        </div>
+        {% endfor %}
+        <div class="bs-row">
+            <span class="text-slate-600 italic">Net Income (Unappropriated)</span>
+            <span class="font-mono {% if net_income >= 0 %}text-emerald-700{% else %}text-red-700{% endif %}">{{ net_income|rupiah }}</span>
+        </div>
+        <div class="bs-total">
+            <span>Total Equity</span>
+            <span class="font-mono">{{ total_equity|rupiah }}</span>
+        </div>
+        <div class="bs-total" style="border-top:2px solid #f97316; background:#fff7ed;">
+            <span class="font-bold text-slate-900">TOTAL LIABILITIES + EQUITY</span>
+            <span class="font-mono font-bold text-slate-900">{{ total_liabilities_equity|rupiah }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

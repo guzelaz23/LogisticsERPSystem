@@ -1,0 +1,109 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}Edit Shipment - SAP Express{% endblock %}
+{% block breadcrumb %}Edit Shipment{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-xl font-extrabold text-slate-800">Edit Shipment</h1>
+            <p class="text-sm text-slate-500 mt-0.5">{{ shipment.awb_number }} — only available while status is Pending</p>
+        </div>
+        <a href="{% url 'shipment_detail' shipment.pk %}" class="btn btn-ghost btn-sm">← Back</a>
+    </div>
+
+    <form method="post" class="space-y-5">
+        {% csrf_token %}
+
+        <div class="card p-5">
+            <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase tracking-wider">Customer</h3>
+            <div>{{ form.customer }}</div>
+            {% if form.customer.errors %}<p class="text-red-500 text-xs mt-1">{{ form.customer.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="card p-5">
+            <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase tracking-wider">Sender</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Sender Name</label>
+                    {{ form.sender_name }}
+                    {% if form.sender_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.sender_name.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Sender Phone</label>
+                    {{ form.sender_phone }}
+                    {% if form.sender_phone.errors %}<p class="text-red-500 text-xs mt-1">{{ form.sender_phone.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Sender Address</label>
+                    {{ form.sender_address }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Origin City</label>
+                    {{ form.origin_city }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase tracking-wider">Recipient</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Recipient Name</label>
+                    {{ form.recipient_name }}
+                    {% if form.recipient_name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.recipient_name.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Recipient Phone</label>
+                    {{ form.recipient_phone }}
+                    {% if form.recipient_phone.errors %}<p class="text-red-500 text-xs mt-1">{{ form.recipient_phone.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Recipient Address</label>
+                    {{ form.recipient_address }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Destination City</label>
+                    {{ form.destination_city }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <h3 class="text-sm font-bold text-slate-600 mb-4 uppercase tracking-wider">Package</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Service Type</label>
+                    {{ form.service_type }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Weight (kg)</label>
+                    {{ form.weight_kg }}
+                    {% if form.weight_kg.errors %}<p class="text-red-500 text-xs mt-1">{{ form.weight_kg.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Length (cm)</label>
+                    {{ form.length_cm }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Width (cm)</label>
+                    {{ form.width_cm }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Height (cm)</label>
+                    {{ form.height_cm }}
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Package Description</label>
+                    {{ form.package_description }}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 justify-end">
+            <a href="{% url 'shipment_detail' shipment.pk %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

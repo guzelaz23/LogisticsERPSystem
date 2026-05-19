@@ -1,0 +1,132 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Journal Entries - SAP Express{% endblock %}
+{% block breadcrumb %}Journal Entries{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .print-only { display: block !important; }
+        .no-print   { display: none  !important; }
+        #sidebar, header, .btn { display: none !important; }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            break-inside: auto !important;  /* allow table to split across pages */
+        }
+        tr { break-inside: avoid; }        /* but keep each row intact */
+        /* Show all detail lines when printing */
+        tr[x-show], tr[x-cloak] { display: table-row !important; }
+        /* Hide the expand/collapse toggle column */
+        th.je-toggle-col, td.je-toggle-col { display: none !important; }
+        /* Status: plain text in print */
+        .je-status-badge { display: none !important; }
+        .je-status-text  { display: inline !important; }
+    }
+    [x-cloak] { display: none !important; }
+</style>
+
+<div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">General Journal (Journal Entries)</h3>
+    <p style="font-size:12px; color:#555; margin:2px 0;">Page {{ entries.number }} of {{ entries.paginator.num_pages }} ({{ entries.paginator.count }} entries total)</p>
+    <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
+    <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
+</div>
+
+<div class="mb-5 flex items-center justify-between no-print">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Journal Entries</h1>
+        <p class="text-sm text-slate-500 mt-0.5">All posted accounting journal entries</p>
+    </div>
+    <button onclick="window.print()" class="btn btn-primary no-print">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Print
+    </button>
+</div>
+
+<div class="card overflow-hidden">
+    <table class="data-table w-full">
+        <thead>
+            <tr>
+                <th class="text-left w-8 je-toggle-col"></th>
+                <th class="text-left">No. JE</th>
+                <th class="text-left">Date</th>
+                <th class="text-left">Description</th>
+                <th class="text-left">Reference</th>
+                <th class="text-right">Total Debit</th>
+                <th class="text-right">Total Credit</th>
+                <th class="text-center">Status</th>
+            </tr>
+        </thead>
+        {% for entry in entries %}
+        <tbody x-data="{ open: false }">
+            <tr class="cursor-pointer hover:bg-slate-50" @click="open = !open">
+                <td class="text-center text-slate-400 px-3 je-toggle-col">
+                    <span x-text="open ? '▾' : '▸'">▸</span>
+                </td>
+                <td class="font-mono text-sm font-semibold" style="color:#0f2a4a;">{{ entry.entry_number }}</td>
+                <td class="text-sm">{{ entry.entry_date }}</td>
+                <td class="text-sm text-slate-600">{{ entry.description }}</td>
+                <td class="text-sm font-mono text-slate-500">{{ entry.reference }}</td>
+                <td class="text-right font-mono text-sm">{{ entry.total_debit|rupiah }}</td>
+                <td class="text-right font-mono text-sm">{{ entry.total_credit|rupiah }}</td>
+                <td class="text-center">
+                    {% if entry.is_posted %}
+                    <span class="je-status-badge text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Posted</span>
+                    <span class="je-status-text text-xs font-semibold" style="display:none;">Posted</span>
+                    {% else %}
+                    <span class="je-status-badge text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Draft</span>
+                    <span class="je-status-text text-xs font-semibold" style="display:none;">Draft</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr x-show="open" x-cloak class="bg-slate-50">
+                <td colspan="8" class="px-8 py-0">
+                    <table class="w-full text-sm mb-3 mt-2">
+                        <thead>
+                            <tr class="text-xs text-slate-500 uppercase tracking-wide">
+                                <th class="text-left py-1 w-24">Account Code</th>
+                                <th class="text-left py-1">Account Name</th>
+                                <th class="text-right py-1">Debit</th>
+                                <th class="text-right py-1">Credit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in entry.lines.all %}
+                            <tr class="border-t border-slate-200">
+                                <td class="py-1 font-mono text-slate-600">{{ line.account.account_code }}</td>
+                                <td class="py-1 text-slate-700">{{ line.account.account_name }}</td>
+                                <td class="py-1 text-right font-mono">{% if line.debit_amount %}{{ line.debit_amount|rupiah }}{% else %}—{% endif %}</td>
+                                <td class="py-1 text-right font-mono">{% if line.credit_amount %}{{ line.credit_amount|rupiah }}{% else %}—{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+        {% empty %}
+        <tbody>
+            <tr>
+                <td colspan="8" class="text-center text-slate-400 py-8">No journal entries yet. Generate an invoice or confirm a payment to create entries.</td>
+            </tr>
+        </tbody>
+        {% endfor %}
+    </table>
+</div>
+
+{% if entries.has_other_pages %}
+<div class="mt-4 flex justify-center gap-2 no-print">
+    {% if entries.has_previous %}
+    <a href="?page={{ entries.previous_page_number }}" class="btn btn-ghost btn-sm">← Prev</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-sm text-slate-500">Page {{ entries.number }} of {{ entries.paginator.num_pages }}</span>
+    {% if entries.has_next %}
+    <a href="?page={{ entries.next_page_number }}" class="btn btn-ghost btn-sm">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Trial Balance - SAP Express{% endblock %}
+{% block breadcrumb %}Trial Balance{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .print-only { display: block !important; }
+        .no-print   { display: none  !important; }
+        #sidebar, header, .btn { display: none !important; }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            break-inside: auto !important;
+        }
+        tr { break-inside: avoid; }
+        .tb-badge { display: none !important; }
+        .tb-badge-print { display: inline !important; }
+        .tb-total-row td {
+            border-top: 3px double #000 !important;
+            border-bottom: 3px double #000 !important;
+        }
+        .tb-balanced-badge { display: none !important; }
+        .tb-balanced-print { display: block !important; }
+    }
+    .tb-badge-print { display: none; }
+    .tb-balanced-print { display: none; }
+</style>
+
+<div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">Trial Balance</h3>
+    <p style="font-size:12px; color:#555; margin:2px 0;">As of: {{ as_of_date }}</p>
+    <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
+    <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
+</div>
+
+<div class="card p-5 mb-5 no-print">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">As of Date</label>
+            <input type="date" name="as_of_date" value="{{ as_of_date }}" class="form-input" style="width:auto">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+</div>
+
+<div class="mb-5 flex items-center justify-between no-print">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Trial Balance</h1>
+        <p class="text-sm text-slate-500 mt-0.5">As of {{ as_of_date }}</p>
+    </div>
+    <button onclick="window.print()" class="btn btn-primary no-print">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Print
+    </button>
+</div>
+
+<div class="mb-4 tb-balanced-badge">
+    {% if is_balanced %}
+    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">✓ BALANCED</span>
+    {% else %}
+    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">✗ NOT BALANCED</span>
+    {% endif %}
+</div>
+<div class="tb-balanced-print" style="font-size:11px; color:#555; margin-bottom:10px;">
+    Trial Balance: {% if is_balanced %}Total Debit = Total Credit (BALANCED){% else %}NOT BALANCED — check journal entries{% endif %}
+</div>
+
+<div class="card overflow-hidden">
+    <table class="data-table w-full">
+        <thead>
+            <tr>
+                <th class="text-left">Account No.</th>
+                <th class="text-left">Account Name</th>
+                <th class="text-left">Type</th>
+                <th class="text-right">Debit</th>
+                <th class="text-right">Credit</th>
+                <th class="text-right">Balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gl in gl_entries %}
+            <tr>
+                <td class="font-mono text-sm">{{ gl.account_code }}</td>
+                <td>{{ gl.account_name }}</td>
+                <td>
+                    <span class="tb-badge text-xs font-semibold uppercase px-2 py-0.5 rounded
+                        {% if gl.account_type == 'ASSET' %}bg-blue-100 text-blue-700
+                        {% elif gl.account_type == 'LIABILITY' %}bg-orange-100 text-orange-700
+                        {% elif gl.account_type == 'EQUITY' %}bg-purple-100 text-purple-700
+                        {% elif gl.account_type == 'REVENUE' %}bg-emerald-100 text-emerald-700
+                        {% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ gl.account_type }}
+                    </span>
+                    <span class="tb-badge-print text-xs font-semibold">{{ gl.account_type }}</span>
+                </td>
+                <td class="text-right font-mono">{{ gl.debit_total|rupiah }}</td>
+                <td class="text-right font-mono">{{ gl.credit_total|rupiah }}</td>
+                <td class="text-right font-mono font-semibold {% if gl.balance < 0 %}text-red-600{% else %}text-slate-800{% endif %}">
+                    {{ gl.balance|rupiah }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center text-slate-400 py-8">No GL data. Run seed_coa and create transactions.</td></tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="font-bold text-slate-900 tb-total-row">
+                <td colspan="3" class="py-3 px-4">TOTAL</td>
+                <td class="text-right py-3 px-4 font-mono">{{ total_debit|rupiah }}</td>
+                <td class="text-right py-3 px-4 font-mono">{{ total_credit|rupiah }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% endblock %}

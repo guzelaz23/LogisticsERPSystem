@@ -1,0 +1,138 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Shipment Report - SAP Express{% endblock %}
+{% block breadcrumb %}Shipment Report{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .print-only  { display: block !important; }
+        .no-print    { display: none  !important; }
+        .print-footer{ display: block !important; }
+        .card        {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            break-inside: auto !important;
+        }
+        tr           { break-inside: avoid; }
+        .status-grid { grid-template-columns: repeat(5, 1fr) !important; }
+        .data-table  { font-size: 11px !important; }
+        .data-table tbody td { padding: 6px 10px !important; }
+        .data-table thead th { padding: 6px 10px !important; }
+        .data-table tbody tr:hover { background: transparent !important; }
+        @page { size: A4 landscape; }
+    }
+</style>
+
+<!-- Print-only document header -->
+<div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">Shipment Report</h3>
+    <p style="font-size:12px; color:#555; margin:2px 0;">Period: {{ start_date|default:"All" }} — {{ end_date|default:"All" }}</p>
+    <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
+    <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
+</div>
+
+<!-- Screen header (hidden on print) -->
+<div class="mb-5 no-print">
+    <h1 class="text-xl font-extrabold text-slate-800">Shipment Report</h1>
+    <p class="text-sm text-slate-500 mt-0.5">Operational tracking and shipment analytics</p>
+</div>
+
+<!-- Filter (hidden on print) -->
+<div class="card p-5 mb-5 no-print">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-input" style="width:auto">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-input" style="width:auto">
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Report</button>
+        <div class="flex gap-2 ml-auto">
+            <a href="?{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}&{% endif %}export=csv"
+               class="btn btn-ghost btn-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Export CSV
+            </a>
+            <button type="button" onclick="window.print()" class="btn btn-primary btn-sm">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                Print / PDF
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Status breakdown (visible on screen and print) -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-5 status-grid">
+    {% for status in status_counts %}
+    <div class="card p-5 text-center" style="page-break-inside:avoid;">
+        <p class="text-3xl font-extrabold text-orange-500">{{ status.total }}</p>
+        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mt-1">{{ status.status }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Shipment Transaction List (visible on screen and print) -->
+<div class="card p-5">
+    <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">Shipment Transaction List</h3>
+    <div class="overflow-x-auto">
+        <table class="data-table">
+            <thead><tr>
+                <th>AWB Number</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Route</th>
+                <th>Service</th>
+                <th class="text-right">Weight (kg)</th>
+                <th class="text-right">Total Cost</th>
+                <th class="text-center">Status</th>
+            </tr></thead>
+            <tbody>
+                {% for shipment in shipments %}
+                <tr>
+                    <td class="font-mono-code text-xs text-slate-700">{{ shipment.awb_number }}</td>
+                    <td class="text-slate-600">{{ shipment.created_at|date:"d M Y" }}</td>
+                    <td class="text-slate-700">{{ shipment.customer }}</td>
+                    <td class="text-slate-600">{{ shipment.origin_city }} → {{ shipment.destination_city }}</td>
+                    <td class="text-slate-600">{{ shipment.get_service_type_display }}</td>
+                    <td class="text-right text-slate-600">{{ shipment.weight_kg }}</td>
+                    <td class="text-right font-mono-code text-slate-700">{{ shipment.total_cost|rupiah }}</td>
+                    <td class="text-center"><span class="badge badge-{{ shipment.status|lower }}">{{ shipment.status }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center py-8 text-slate-400">No shipment data for this period.</td></tr>
+                {% endfor %}
+                {% if shipments %}
+                <tr style="font-weight:700; border-top:2px solid #e2e8f0; background:#f8fafc;">
+                    <td colspan="5" style="padding:12px 16px; font-size:14px;" class="font-bold text-slate-800">
+                        TOTAL SHIPMENTS: {{ total_shipments }}
+                    </td>
+                    <td style="padding:12px 16px;"></td>
+                    <td style="padding:12px 16px; font-size:14px; text-align:right;" class="font-mono-code font-bold text-slate-800">
+                        {{ total_revenue|rupiah }}
+                    </td>
+                    <td style="padding:12px 16px;"></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Print footer -->
+<div class="print-footer" style="display:none; margin-top:40px; border-top:1px solid #ccc; padding-top:12px; font-size:11px; color:#666; text-align:center;">
+    SAP Express ERP — AIS Final Project &nbsp;|&nbsp;
+    Printed: {% now "d M Y, H:i" %} &nbsp;|&nbsp;
+    {{ request.user.username }}
+</div>
+
+{% endblock %}

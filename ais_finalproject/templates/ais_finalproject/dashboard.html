@@ -1,0 +1,324 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Dashboard - SAP Express{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-5">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Operational Dashboard</h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+            Financial overview &amp; shipment activity — {{ today|date:"d F Y" }}
+        </p>
+    </div>
+    <div class="flex gap-2">
+        {% if request.user.is_superuser or request.user|has_group:'SALES_OPS' %}
+        <a href="{% url 'shipment_add' %}" class="btn btn-orange">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New AWB
+        </a>
+        {% endif %}
+        {% if request.user.is_superuser or request.user|has_group:'FINANCE' or request.user|has_group:'MANAGEMENT' %}
+        <a href="{% url 'revenue_report' %}" class="btn btn-ghost">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Reports
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- KPI CARDS — 4 kolom -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+
+    <!-- Outstanding AR -->
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                </svg>
+            </div>
+            {% if overdue_invoices > 0 %}
+            <span class="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                {{ overdue_invoices }} Overdue
+            </span>
+            {% endif %}
+        </div>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Outstanding AR</p>
+        <p class="text-xl font-extrabold text-slate-800">{{ outstanding_ar|rupiah }}</p>
+        <p class="text-xs text-slate-400 mt-1">{{ pending_invoices }} unpaid invoices</p>
+    </div>
+
+    <!-- Revenue Month -->
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                This Month
+            </span>
+        </div>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
+        <p class="text-xl font-extrabold text-slate-800">{{ revenue_month|rupiah }}</p>
+        <p class="text-xs text-slate-400 mt-1">Collected: {{ total_collected|rupiah }}</p>
+    </div>
+
+    <!-- Pending Invoices -->
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+            </div>
+        </div>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Pending Invoices</p>
+        <p class="text-3xl font-extrabold text-slate-800">{{ pending_invoices }}</p>
+        <p class="text-xs text-slate-400 mt-1">Paid this month: {{ paid_invoices }}</p>
+    </div>
+
+    <!-- Total Shipments -->
+    <div class="card p-5">
+        <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                </svg>
+            </div>
+            <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                This Month
+            </span>
+        </div>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Shipments</p>
+        <p class="text-3xl font-extrabold text-slate-800">{{ total_shipments_month }}</p>
+        <p class="text-xs text-slate-400 mt-1">All time: {{ total_shipments_all }}</p>
+    </div>
+
+</div>
+
+<!-- ROW 2: Chart + Invoice Status -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+
+    <!-- Revenue Chart (2/3) -->
+    <div class="lg:col-span-2 card p-5">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-700">Revenue Trend</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Last 6 months (delivered shipments)</p>
+            </div>
+            <a href="{% url 'revenue_report' %}" class="text-xs text-orange-500 hover:text-orange-700 font-semibold">
+                Full Report →
+            </a>
+        </div>
+        <canvas id="revenueChart" height="80"></canvas>
+    </div>
+
+    <!-- Invoice Status (1/3) -->
+    <div class="card p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-700">Invoice Status</h3>
+            <a href="{% url 'invoice_list' %}" class="text-xs text-orange-500 font-semibold">View All →</a>
+        </div>
+
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
+                    <span class="text-sm text-slate-600">Paid</span>
+                </div>
+                <span class="text-sm font-bold text-slate-800">{{ paid_invoices }}</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5">
+                {% with total=paid_invoices|add:pending_invoices %}
+                <div class="bg-emerald-400 h-1.5 rounded-full"
+                     style="width: {% if total > 0 %}{% widthratio paid_invoices total 100 %}{% else %}0{% endif %}%"></div>
+                {% endwith %}
+            </div>
+
+            <div class="flex items-center justify-between mt-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                    <span class="text-sm text-slate-600">Unpaid / Partial</span>
+                </div>
+                <span class="text-sm font-bold text-slate-800">{{ pending_invoices }}</span>
+            </div>
+
+            {% if overdue_invoices > 0 %}
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                    <span class="text-sm text-slate-600">Overdue</span>
+                </div>
+                <span class="text-sm font-bold text-red-600">{{ overdue_invoices }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-slate-100">
+            <p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-2">AR Outstanding</p>
+            <p class="text-lg font-extrabold text-slate-800">{{ outstanding_ar|rupiah }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">Uncollected</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- ROW 3: Recent Invoices + Recent Shipments -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+    <!-- Invoice List (2/3) -->
+    <div class="lg:col-span-2 card">
+        <div class="flex items-center justify-between p-5 border-b border-slate-100">
+            <div>
+                <h3 class="text-sm font-bold text-slate-700">Invoice List</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Recent billing transactions</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'invoice_list' %}?export=csv" class="btn btn-ghost btn-sm">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Export CSV
+                </a>
+                <a href="{% url 'invoice_list' %}" class="btn btn-ghost btn-sm">View All →</a>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Invoice ID</th>
+                    <th>Customer</th>
+                    <th class="text-right">Amount</th>
+                    <th>Due Date</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in recent_invoices %}
+                <tr>
+                    <td>
+                        <a href="{% url 'invoice_detail' inv.pk %}"
+                           class="font-mono-code text-xs font-semibold text-slate-700 hover:text-orange-600">
+                            {{ inv.invoice_number }}
+                        </a>
+                    </td>
+                    <td class="text-sm text-slate-600">{{ inv.customer.name }}</td>
+                    <td class="text-right font-mono-code text-sm font-semibold text-slate-800">
+                        {{ inv.total_amount|rupiah }}
+                    </td>
+                    <td class="text-sm {% if inv.payment_status != 'PAID' and inv.due_date < today.date %}text-red-600 font-semibold{% else %}text-slate-500{% endif %}">
+                        {{ inv.due_date|date:"d M Y" }}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-{{ inv.payment_status|lower }}">
+                            {{ inv.get_payment_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-8 text-slate-400 text-sm">
+                        No invoices yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Shipments (1/3) -->
+    <div class="card p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-slate-700">Recent Shipments</h3>
+            <a href="{% url 'shipment_list' %}" class="text-xs text-orange-500 font-semibold">View All →</a>
+        </div>
+        <div class="space-y-2">
+            {% for shipment in recent_shipments %}
+            <a href="{% url 'shipment_detail' shipment.pk %}"
+               class="flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 transition-colors group">
+                <div class="min-w-0">
+                    <p class="font-mono-code text-xs font-semibold text-slate-700 group-hover:text-orange-600 truncate">
+                        {{ shipment.awb_number }}
+                    </p>
+                    <p class="text-xs text-slate-400 mt-0.5 truncate">
+                        {{ shipment.origin_city }} → {{ shipment.destination_city }}
+                    </p>
+                </div>
+                <span class="badge badge-{{ shipment.status|lower }} ml-2 flex-shrink-0">
+                    {{ shipment.status }}
+                </span>
+            </a>
+            {% empty %}
+            <p class="text-sm text-slate-400 text-center py-6">No shipments yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Revenue (Rp)',
+                data: {{ chart_data|safe }},
+                backgroundColor: 'rgba(249,115,22,0.12)',
+                borderColor: '#f97316',
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(c) {
+                            return ' Rp ' + c.parsed.y.toLocaleString('id-ID');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        font: { size: 11 },
+                        callback: function(v) {
+                            if (v >= 1000000) return 'Rp ' + (v/1000000).toFixed(1) + 'M';
+                            if (v >= 1000)    return 'Rp ' + (v/1000).toFixed(0) + 'K';
+                            return 'Rp ' + v;
+                        }
+                    }
+                },
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

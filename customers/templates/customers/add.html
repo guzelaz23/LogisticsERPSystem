@@ -1,0 +1,38 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}Add Customer - SAP Express{% endblock %}
+{% block breadcrumb %}Add Customer{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-5">
+        <a href="{% url 'customer_list' %}" class="text-xs text-slate-400 hover:text-slate-600 font-medium inline-flex items-center gap-1 mb-2">← Back to Customers</a>
+        <h1 class="text-xl font-extrabold text-slate-800">Add New Customer</h1>
+    </div>
+    <div class="card p-6">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Full Name *</label>{{ form.name }}
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Company</label>{{ form.company }}
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Phone *</label>{{ form.phone }}</div>
+                <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Email</label>{{ form.email }}</div>
+            </div>
+            <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Address *</label>{{ form.address }}</div>
+            <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">City *</label>{{ form.city }}</div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <a href="{% url 'customer_list' %}" class="btn btn-ghost">Cancel</a>
+                <button type="submit" class="btn btn-orange">Save Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type=text],input[type=email],input[type=number],select,textarea').forEach(el => el.classList.add('form-input'));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'ais_finalproject/base.html' %}
+{% load custom_filters %}
+{% block title %}Revenue Report - SAP Express{% endblock %}
+{% block breadcrumb %}Revenue Report{% endblock %}
+
+{% block content %}
+<style>
+    @media print {
+        .print-only  { display: block !important; }
+        .no-print    { display: none  !important; }
+        .kpi-grid-4  {
+            display: flex !important;
+            flex-wrap: wrap !important;
+        }
+        .kpi-grid-4 > * { flex: 1 1 45% !important; min-width: 0 !important; }
+        .kpi-card    { page-break-inside: avoid; border-top: none !important; border: 1px solid #ddd !important; }
+        canvas       { max-width: 100% !important; }
+        .print-footer{ display: block !important; }
+        .card        { box-shadow: none !important; border: 1px solid #ddd !important; }
+        .data-table tbody tr:hover { background: transparent !important; }
+    }
+</style>
+
+<!-- Print-only document header -->
+<div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">Revenue Report</h3>
+    <p style="font-size:12px; color:#555; margin:2px 0;">Period: {{ start_date|default:"All" }} — {{ end_date|default:"All" }}</p>
+    <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
+    <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
+</div>
+
+<!-- Screen header (hidden on print) -->
+<div class="mb-5 flex items-center justify-between no-print">
+    <div>
+        <h1 class="text-xl font-extrabold text-slate-800">Revenue Report</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Revenue analysis and financial performance</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="?{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}&{% endif %}export=csv"
+           class="btn btn-ghost btn-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export CSV
+        </a>
+        <button type="button" onclick="window.print()" class="btn btn-primary btn-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Print / PDF
+        </button>
+    </div>
+</div>
+
+<!-- Filter (hidden on print) -->
+<div class="card p-5 mb-5 no-print">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-input" style="width:auto">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-input" style="width:auto">
+        </div>
+        <button type="submit" class="btn btn-primary">Generate</button>
+    </form>
+</div>
+
+<!-- KPI Row -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5 kpi-grid-4">
+    <div class="kpi-card blue">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Shipments</p>
+        <p class="text-3xl font-extrabold text-slate-800">{{ total_shipments }}</p>
+        <p class="text-xs text-slate-400 mt-1">Delivered</p>
+    </div>
+    <div class="kpi-card green">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Service Revenue</p>
+        <p class="text-xl font-extrabold text-slate-800">{{ total_revenue|rupiah }}</p>
+        <p class="text-xs text-slate-400 mt-1">Excl. PPN</p>
+    </div>
+    <div class="kpi-card orange">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">PPN Collected (11%)</p>
+        <p class="text-xl font-extrabold text-slate-800">{{ total_ppn|rupiah }}</p>
+        <p class="text-xs text-slate-400 mt-1">Liability to tax authority</p>
+    </div>
+    <div class="kpi-card purple">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Revenue (excl. PPN)</p>
+        <p class="text-xl font-extrabold text-violet-600">{{ net_revenue|rupiah }}</p>
+        <p class="text-xs text-slate-400 mt-1">= Service Revenue</p>
+    </div>
+</div>
+
+<!-- Charts (screen only, hidden on print) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5 no-print">
+    <div class="lg:col-span-2 card p-6">
+        <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-5">Revenue Trend</h3>
+        <canvas id="revenueChart" height="90"></canvas>
+    </div>
+    <div class="card p-6">
+        <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-5">By Service Type</h3>
+        <div class="flex justify-center items-center h-48">
+            <canvas id="serviceChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Source note -->
+<div class="text-xs text-slate-400 mb-3 italic">
+    * This report is sourced from Invoice data (excl. CANCELLED &amp; RETURNED). For reconciliation with the general ledger, use Trial Balance.
+</div>
+
+<!-- Monthly Revenue Detail (visible on screen and print) -->
+<div class="card p-5">
+    <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">Monthly Revenue Detail</h3>
+    <div class="overflow-x-auto">
+        <table class="data-table">
+            <thead><tr>
+                <th>Month</th>
+                <th class="text-center">Invoices</th>
+                <th class="text-right">Service Revenue (excl. PPN)</th>
+                <th class="text-right">PPN Collected (11%)</th>
+                <th class="text-right">Revenue (excl. PPN)</th>
+            </tr></thead>
+            <tbody>
+                {% for item in monthly_data %}
+                <tr>
+                    <td class="font-semibold text-slate-700">{{ item.month|date:"F Y" }}</td>
+                    <td class="text-center text-slate-600">{{ item.shipments_count }}</td>
+                    <td class="text-right font-mono-code text-slate-700">{{ item.revenue|rupiah }}</td>
+                    <td class="text-right font-mono-code text-slate-400">{{ item.ppn|rupiah }}</td>
+                    <td class="text-right font-mono-code font-bold text-violet-600">{{ item.net|rupiah }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-8 text-slate-400">No revenue data for this period.</td></tr>
+                {% endfor %}
+                {% if monthly_data %}
+                <tr style="font-weight:700; border-top:2px solid #e2e8f0; background:#f8fafc;">
+                    <td style="padding:12px 16px; font-size:14px;" class="font-bold text-slate-800">TOTAL</td>
+                    <td style="padding:12px 16px; font-size:14px; text-align:center;" class="font-bold text-slate-800">{{ total_shipments }}</td>
+                    <td style="padding:12px 16px; font-size:14px; text-align:right;" class="font-mono-code font-bold text-slate-800">{{ total_revenue|rupiah }}</td>
+                    <td style="padding:12px 16px; font-size:14px; text-align:right;" class="font-mono-code font-bold text-slate-600">{{ total_ppn|rupiah }}</td>
+                    <td style="padding:12px 16px; font-size:14px; text-align:right;" class="font-mono-code font-bold text-violet-700">{{ net_revenue|rupiah }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Print footer -->
+<div class="print-footer" style="display:none; margin-top:40px; border-top:1px solid #ccc; padding-top:12px; font-size:11px; color:#666; text-align:center;">
+    SAP Express ERP — AIS Final Project &nbsp;|&nbsp;
+    Printed: {% now "d M Y, H:i" %} &nbsp;|&nbsp;
+    {{ request.user.username }}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new Chart(document.getElementById('revenueChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ chart_months|safe }},
+            datasets: [{
+                data: {{ chart_revenue|safe }},
+                borderColor: '#0f2a4a', backgroundColor: 'rgba(15,42,74,0.06)',
+                borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#f97316', pointRadius: 4
+            }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+        }
+    });
+    new Chart(document.getElementById('serviceChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ pie_labels|safe }},
+            datasets: [{ data: {{ pie_data|safe }}, backgroundColor: ['#0f2a4a','#f97316','#3b82f6','#10b981'], borderWidth: 0 }]
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+            cutout: '65%'
+        }
+    });
+});
+</script>
+{% endblock %}

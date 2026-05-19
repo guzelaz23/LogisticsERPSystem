@@ -1,0 +1,49 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}Record Expense - SAP Express{% endblock %}
+{% block breadcrumb %}Record Expense{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+    <div class="mb-5">
+        <h1 class="text-xl font-extrabold text-slate-800">Record Expense</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Creates journal entry: DR Expense Account / CR Cash & Bank</p>
+    </div>
+
+    <div class="card p-6">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Expense Account</label>
+                {{ form.account }}
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Amount (Rp)</label>
+                    {{ form.amount }}
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Date</label>
+                    {{ form.expense_date }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Description</label>
+                {{ form.description }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Reference (Optional)</label>
+                {{ form.reference }}
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="btn btn-primary">Record Expense</button>
+                <a href="{% url 'journal_entries' %}" class="btn btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
