@@ -11,7 +11,9 @@
       "Bash(\"D:\\\\College 2nd Year\\\\SEMESTER 2\\\\AIS_project\\\\venv\\\\Scripts\\\\python.exe\" -c \"import ast; ast.parse\\(open\\('billing/forms.py'\\).read\\(\\)\\); print\\('OK'\\)\")",
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"ERP logistics SaaS dashboard professional clean\" --design-system -p \"SAP Express\" -f markdown)",
       "Bash(python manage.py makemigrations shipments)",
-      "Bash(python manage.py migrate shipments)"
+      "Bash(python manage.py migrate shipments)",
+      "Bash(python manage.py check)",
+      "Bash(python manage.py migrate --check)"
     ]
   }
 }

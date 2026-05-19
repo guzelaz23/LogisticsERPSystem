@@ -5,7 +5,9 @@
 
 {% block content %}
 <style>
+    @page { margin: 0; }
     @media print {
+        body { padding: 1.5cm 2cm; }
         .print-only { display: block !important; }
         .no-print   { display: none  !important; }
         #sidebar, header, .btn { display: none !important; }
@@ -27,7 +29,7 @@
 </style>
 
 <div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
-    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistik</h2>
+    <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistic</h2>
     <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">General Journal (Journal Entries)</h3>
     <p style="font-size:12px; color:#555; margin:2px 0;">Page {{ entries.number }} of {{ entries.paginator.num_pages }} ({{ entries.paginator.count }} entries total)</p>
     <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
