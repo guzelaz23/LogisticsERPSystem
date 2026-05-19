@@ -18,11 +18,17 @@ def dashboard(request):
     total_shipments_month = Shipment.objects.filter(created_at__gte=first_of_month).count()
     total_shipments_all   = Shipment.objects.count()
 
-    revenue_month = Shipment.objects.filter(
-        status='DELIVERED', created_at__gte=first_of_month
-    ).aggregate(total=Sum('total_cost'))['total'] or 0
+    # Revenue = actual cash received this month (payment basis)
+    revenue_month = Payment.objects.filter(
+        payment_date__gte=first_of_month.date()
+    ).aggregate(total=Sum('amount_paid'))['total'] or 0
 
-    # Accounts Receivable (AR) — includes OVERDUE invoices
+    # Collected = total invoiced this month (what we billed, paid or not)
+    total_collected = Invoice.objects.filter(
+        created_at__gte=first_of_month
+    ).aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # Outstanding AR — unpaid/partial/overdue invoices (all time)
     outstanding_ar = Invoice.objects.filter(
         payment_status__in=['UNPAID', 'PARTIAL', 'OVERDUE']
     ).aggregate(total=Sum('total_amount'))['total'] or 0
@@ -31,26 +37,22 @@ def dashboard(request):
     overdue_invoices = Invoice.objects.filter(payment_status='OVERDUE').count()
     paid_invoices    = Invoice.objects.filter(payment_status='PAID').count()
 
-    total_collected = Payment.objects.filter(
-        created_at__gte=first_of_month
-    ).aggregate(total=Sum('amount_paid'))['total'] or 0
-
     recent_invoices = Invoice.objects.select_related(
         'customer', 'shipment'
     ).order_by('-created_at')[:6]
 
     recent_shipments = Shipment.objects.select_related('customer').order_by('-created_at')[:5]
 
-    # Revenue Chart (Last 6 Months)
+    # Revenue Chart (Last 6 Months) — cash received per month
     chart_labels = []
     chart_data   = []
     for i in range(5, -1, -1):
-        dt    = today - relativedelta(months=i)
-        start = dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        end   = start + relativedelta(months=1)
-        rev   = Shipment.objects.filter(
-            status='DELIVERED', created_at__gte=start, created_at__lt=end
-        ).aggregate(total=Sum('total_cost'))['total'] or 0
+        dt         = today - relativedelta(months=i)
+        start_date = dt.replace(day=1).date()
+        end_date   = (dt.replace(day=1) + relativedelta(months=1)).date()
+        rev = Payment.objects.filter(
+            payment_date__gte=start_date, payment_date__lt=end_date
+        ).aggregate(total=Sum('amount_paid'))['total'] or 0
         chart_labels.append(dt.strftime('%b'))
         chart_data.append(float(rev))
 
