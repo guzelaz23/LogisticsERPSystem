@@ -132,7 +132,7 @@ class Payment(models.Model):
             invoice.payment_status = 'PAID'
         elif total_paid > 0:
             invoice.payment_status = 'PARTIAL'
-        invoice.save()
+        invoice.save(update_fields=['payment_status'])
         if _is_new:
             self._gl_posted = self._create_journal_entry()
 
