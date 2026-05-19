@@ -173,6 +173,7 @@ class Command(BaseCommand):
         i0405 = inv('INV-202604-000005',s0405,52500,5775,58275,'PAID',date(2026,4,13),date(2026,4,27))
         i0406 = inv('INV-202604-000006',s0406,48000,5280,53280,'PAID',date(2026,4,16),date(2026,4,30))
         i0407 = inv('INV-202604-000007',s0407,67500,7425,74925,'OVERDUE',date(2026,4,19),date(2026,5,3))
+        i0408 = inv('INV-202604-000008',s0408,64000,7040,71040,'PAID',date(2026,4,21),date(2026,5,5))
 
         pay('PAY-202604-000001',i0401,83250,'TRANSFER',date(2026,4,10),'TRF-BCA-20260410-001')
         pay('PAY-202604-000002',i0402,35520,'CASH',    date(2026,4,15))
@@ -180,7 +181,8 @@ class Command(BaseCommand):
         pay('PAY-202604-000004',i0404,83250,'TRANSFER',date(2026,4,20),'TRF-BNI-20260420-004')
         pay('PAY-202604-000005',i0405,58275,'TRANSFER',date(2026,4,22),'TRF-BCA-20260422-005')
         pay('PAY-202604-000006',i0406,53280,'QRIS',    date(2026,4,25),'QRIS-20260425-006')
-        self.stdout.write(self.style.SUCCESS('  ✓ April    — 8 shipments, 7 invoices, 6 paid, 1 overdue'))
+        pay('PAY-202604-000007',i0408,71040,'CASH',    date(2026,4,28))
+        self.stdout.write(self.style.SUCCESS('  ✓ April    — 8 shipments, 8 invoices, 7 paid, 1 overdue'))
 
         # ── MAY 2026 ──────────────────────────────────────────────────
         self.stdout.write('Seeding May 2026...')
@@ -204,5 +206,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('  ✓ May      — 7 shipments, 4 invoices, 3 paid, 1 unpaid, 3 in transit/pickup/pending'))
 
         self.stdout.write(self.style.SUCCESS('\n✅ 2026 seed complete!'))
-        self.stdout.write('   Total: 42 shipments | 35 invoices | 33 payments')
+        self.stdout.write('   Total: 42 shipments | 36 invoices | 34 payments')
         self.stdout.write('   Run: python manage.py seed_2026')
