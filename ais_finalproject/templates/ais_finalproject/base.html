@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --orange: #f97316; --orange-light: #fb923c;
@@ -76,7 +76,13 @@
 
         ::-webkit-scrollbar{width:5px;height:5px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
 
-        @media(max-width:768px){#sidebar{transform:translateX(-100%);position:fixed;z-index:50} #sidebar.open{transform:translateX(0)} #main-content{margin-left:0!important}}
+        @media(max-width:768px){
+            #sidebar{transform:translateX(-100%);position:fixed;z-index:50;transition:transform 0.25s ease}
+            #sidebar.open{transform:translateX(0)}
+            #main-content{margin-left:0!important}
+            #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:40}
+            #sidebar-overlay.open{display:block}
+        }
 
         /* ===== PRINT STYLES ===== */
         @media print {
@@ -120,6 +126,7 @@
 <body class="flex min-h-screen">
 
     {% if user.is_authenticated %}
+    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
     <aside id="sidebar" class="fixed inset-y-0 left-0 flex flex-col z-40 shadow-sm">
         <div class="h-14 flex items-center px-4 border-b border-gray-100">
             <div class="flex items-center gap-3">
@@ -237,7 +244,7 @@
     <main id="main-content" class="flex-1 flex flex-col min-h-screen" {% if user.is_authenticated %}style="margin-left: var(--sidebar-w)"{% endif %}>
         {% if user.is_authenticated %}
         <header class="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-            <button class="md:hidden text-gray-400 hover:text-gray-700 p-1 rounded-lg" onclick="document.getElementById('sidebar').classList.toggle('open')">
+            <button class="md:hidden text-gray-400 hover:text-gray-700 p-1 rounded-lg" onclick="toggleSidebar()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
             </button>
             <div class="hidden md:flex items-center gap-1.5 text-sm">
@@ -279,5 +286,15 @@
             SAP Express ERP &copy; 2024 &mdash; AIS Final Project
         </footer>
     </main>
+<script>
+function toggleSidebar(){
+    var s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay');
+    s.classList.toggle('open'); o.classList.toggle('open');
+}
+function closeSidebar(){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
 </body>
 </html>
