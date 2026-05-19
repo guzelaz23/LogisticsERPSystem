@@ -296,8 +296,8 @@ def balance_sheet(request):
         acc.balance = acc.debit_total - acc.credit_total
 
     # current assets: code < 1400; non-current: >= 1400
-    current_asset_list    = [a for a in asset_list if a.account_code < '1400']
-    noncurrent_asset_list = [a for a in asset_list if a.account_code >= '1400']
+    current_asset_list    = [a for a in asset_list if int(a.account_code) < 1400]
+    noncurrent_asset_list = [a for a in asset_list if int(a.account_code) >= 1400]
     total_current_assets    = sum(a.balance for a in current_asset_list)
     total_noncurrent_assets = sum(a.balance for a in noncurrent_asset_list)
 
@@ -367,7 +367,7 @@ def ar_aging(request):
     today = timezone.now().date()
 
     Invoice.objects.filter(
-        payment_status__in=['UNPAID', 'PARTIAL'],
+        payment_status='UNPAID',
         due_date__lt=today,
     ).update(payment_status='OVERDUE')
 

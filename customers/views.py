@@ -8,9 +8,6 @@ from .forms import CustomerForm
 
 @group_required('SALES_OPS', 'FINANCE', 'MANAGEMENT')
 def customer_list(request):
-    # Auto-deactivate customers who have never had any shipment
-    Customer.objects.filter(shipment__isnull=True, is_active=True).update(is_active=False)
-
     query = request.GET.get('q', '')
     if query:
         customers_list = Customer.objects.filter(name__icontains=query) | Customer.objects.filter(customer_code__icontains=query)

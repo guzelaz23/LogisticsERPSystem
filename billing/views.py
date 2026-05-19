@@ -19,7 +19,7 @@ def invoice_list(request):
     export = request.GET.get('export', '')
 
     Invoice.objects.filter(
-        payment_status__in=['UNPAID', 'PARTIAL'],
+        payment_status='UNPAID',
         due_date__lt=timezone.now().date(),
     ).update(payment_status='OVERDUE')
 
