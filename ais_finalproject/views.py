@@ -23,9 +23,13 @@ def dashboard(request):
         payment_date__gte=first_of_month.date()
     ).aggregate(total=Sum('amount_paid'))['total'] or 0
 
-    # Collected = total invoiced this month (what we billed, paid or not)
+    # Collected = total invoiced this month (what we billed, paid or not); exclude void invoices
     total_collected = Invoice.objects.filter(
         created_at__gte=first_of_month
+    ).exclude(
+        payment_status='CANCELLED'
+    ).exclude(
+        shipment__status='RETURNED'
     ).aggregate(total=Sum('total_amount'))['total'] or 0
 
     # Outstanding AR — unpaid/partial/overdue invoices (all time)
