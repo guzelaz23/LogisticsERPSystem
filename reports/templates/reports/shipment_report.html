@@ -51,9 +51,27 @@
             <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">End Date</label>
             <input type="date" name="end_date" value="{{ end_date }}" class="form-input" style="width:auto">
         </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Service Type</label>
+            <select name="service_type" class="form-input" style="width:auto">
+                <option value="">All Services</option>
+                {% for value, label in service_choices %}
+                <option value="{{ value }}" {% if service_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Status</label>
+            <select name="status" class="form-input" style="width:auto">
+                <option value="">All Status</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary">Generate Report</button>
         <div class="flex gap-2 ml-auto">
-            <a href="?{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}&{% endif %}export=csv"
+            <a href="?{% if start_date %}start_date={{ start_date }}&{% endif %}{% if end_date %}end_date={{ end_date }}&{% endif %}{% if service_type %}service_type={{ service_type }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}export=csv"
                class="btn btn-ghost btn-sm">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
