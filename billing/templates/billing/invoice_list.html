@@ -20,13 +20,25 @@
                 <p class="text-xs text-gray-400">Manage all customer invoices and billing</p>
             </div>
         </div>
-        <form method="get" class="flex items-center gap-2">
-            <div class="search-wrap flex-1">
+        <form method="get" class="flex flex-wrap items-end gap-2">
+            <div class="search-wrap">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"></path></svg>
-                <input type="text" name="q" value="{{ query }}" placeholder="Search invoice or customer…" class="form-input w-full sm:w-56">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search invoice or customer…" class="form-input w-full sm:w-44">
             </div>
-            <button type="submit" class="btn btn-primary btn-sm flex-shrink-0">Search</button>
-            {% if query %}<a href="{% url 'invoice_list' %}" class="btn btn-ghost btn-sm flex-shrink-0">Clear</a>{% endif %}
+            <select name="status" class="form-input" style="width:auto">
+                <option value="">All Status</option>
+                <option value="UNPAID"    {% if status_filter == 'UNPAID' %}selected{% endif %}>Unpaid</option>
+                <option value="PARTIAL"   {% if status_filter == 'PARTIAL' %}selected{% endif %}>Partial</option>
+                <option value="OVERDUE"   {% if status_filter == 'OVERDUE' %}selected{% endif %}>Overdue</option>
+                <option value="PAID"      {% if status_filter == 'PAID' %}selected{% endif %}>Paid</option>
+                <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+            </select>
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-input" style="width:auto">
+            <input type="date" name="end_date"   value="{{ end_date }}"   class="form-input" style="width:auto">
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            {% if query or status_filter or start_date or end_date %}
+            <a href="{% url 'invoice_list' %}" class="btn btn-ghost btn-sm">Clear</a>
+            {% endif %}
         </form>
     </div>
 
@@ -59,8 +71,8 @@
     <div class="p-4 border-t border-slate-100 flex items-center justify-between">
         <span class="text-xs text-slate-400">Page {{ invoices.number }} of {{ invoices.paginator.num_pages }}</span>
         <div class="flex gap-1">
-            {% if invoices.has_previous %}<a href="?page=1{% if query %}&q={{ query }}{% endif %}" class="page-btn">«</a><a href="?page={{ invoices.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">‹ Prev</a>{% endif %}
-            {% if invoices.has_next %}<a href="?page={{ invoices.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">Next ›</a><a href="?page={{ invoices.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}" class="page-btn">»</a>{% endif %}
+            {% if invoices.has_previous %}<a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="page-btn">«</a><a href="?page={{ invoices.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="page-btn">‹ Prev</a>{% endif %}
+            {% if invoices.has_next %}<a href="?page={{ invoices.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="page-btn">Next ›</a><a href="?page={{ invoices.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="page-btn">»</a>{% endif %}
         </div>
     </div>
     {% endif %}

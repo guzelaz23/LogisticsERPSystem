@@ -49,6 +49,23 @@
     </button>
 </div>
 
+<div class="card p-5 mb-5 no-print">
+    <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-input" style="width:auto">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-input" style="width:auto">
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        {% if start_date or end_date %}
+        <a href="{% url 'journal_entries' %}" class="btn btn-ghost">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
 <div class="card overflow-hidden">
     <table class="data-table w-full">
         <thead>
@@ -137,11 +154,11 @@
 {% if entries.has_other_pages %}
 <div class="mt-4 flex justify-center gap-2 no-print">
     {% if entries.has_previous %}
-    <a href="?page={{ entries.previous_page_number }}" class="btn btn-ghost btn-sm">← Prev</a>
+    <a href="?page={{ entries.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="btn btn-ghost btn-sm">← Prev</a>
     {% endif %}
     <span class="px-3 py-1.5 text-sm text-slate-500">Page {{ entries.number }} of {{ entries.paginator.num_pages }}</span>
     {% if entries.has_next %}
-    <a href="?page={{ entries.next_page_number }}" class="btn btn-ghost btn-sm">Next →</a>
+    <a href="?page={{ entries.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" class="btn btn-ghost btn-sm">Next →</a>
     {% endif %}
 </div>
 {% endif %}
