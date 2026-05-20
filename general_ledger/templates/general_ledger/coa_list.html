@@ -1,0 +1,48 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}Chart of Accounts - SAP Express{% endblock %}
+{% block breadcrumb %}Chart of Accounts{% endblock %}
+
+{% block content %}
+<div class="mb-5 flex items-center justify-between">
+    <div>
+        <h1 class="text-xl font-bold text-gray-900">Chart of Accounts</h1>
+        <p class="text-sm text-gray-500 mt-0.5">Manage general ledger accounts</p>
+    </div>
+    <a href="{% url 'coa_create' %}" class="btn btn-primary btn-sm">+ Add Account</a>
+</div>
+
+<div class="card overflow-hidden">
+    <table class="data-table">
+        <thead><tr>
+            <th>Code</th>
+            <th>Account Name</th>
+            <th>Type</th>
+            <th>Normal Balance</th>
+            <th class="text-center">Active</th>
+            <th class="text-center">Action</th>
+        </tr></thead>
+        <tbody>
+            {% for acc in accounts %}
+            <tr>
+                <td class="font-mono-code text-sm font-semibold text-slate-800">{{ acc.account_code }}</td>
+                <td class="text-slate-700">{{ acc.account_name }}</td>
+                <td><span class="badge badge-info">{{ acc.get_account_type_display }}</span></td>
+                <td class="text-slate-500 text-sm">{{ acc.get_normal_balance_display }}</td>
+                <td class="text-center">
+                    {% if acc.is_active %}
+                    <span class="text-emerald-600 font-bold text-xs">✓ Active</span>
+                    {% else %}
+                    <span class="text-slate-400 text-xs">Inactive</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'coa_edit' acc.pk %}" class="btn btn-ghost btn-sm">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center py-12 text-slate-400">No accounts found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

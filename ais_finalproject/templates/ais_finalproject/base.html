@@ -228,6 +228,16 @@
                 AR Aging
             </a>
             {% endif %}
+
+            {% if user.is_superuser or user|has_group:'MANAGEMENT' %}
+            <p class="nav-section">Settings</p>
+            <a href="{% url 'coa_list' %}" class="nav-link {% if 'coa' in request.resolver_match.url_name %}active{% endif %}">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+                Chart of Accounts
+            </a>
+            {% endif %}
         </nav>
 
         <div class="p-3 border-t border-slate-100">

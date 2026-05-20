@@ -1,0 +1,68 @@
+{% extends 'ais_finalproject/base.html' %}
+{% block title %}{{ action }} Account - SAP Express{% endblock %}
+{% block breadcrumb %}{{ action }} Account{% endblock %}
+
+{% block content %}
+<div class="mb-5">
+    <h1 class="text-xl font-bold text-gray-900">{{ action }} Account</h1>
+    <p class="text-sm text-gray-500 mt-0.5">Chart of Accounts</p>
+</div>
+
+<div class="card p-6 max-w-lg">
+    <form method="post">
+        {% csrf_token %}
+
+        {% if action == 'Create' %}
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Account Code</label>
+            <input type="text" name="account_code" placeholder="e.g. 5300" class="form-input w-full" required>
+        </div>
+        {% else %}
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Account Code</label>
+            <input type="text" value="{{ account.account_code }}" class="form-input w-full bg-slate-50" disabled>
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Account Name</label>
+            <input type="text" name="account_name" value="{% if account %}{{ account.account_name }}{% endif %}"
+                   placeholder="e.g. Marketing Expenses" class="form-input w-full" required>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Account Type</label>
+            <select name="account_type" class="form-input w-full" required>
+                <option value="">Select type...</option>
+                {% for value, label in account_types %}
+                <option value="{{ value }}" {% if account and account.account_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Normal Balance</label>
+            <select name="normal_balance" class="form-input w-full" required>
+                <option value="">Select balance...</option>
+                {% for value, label in normal_balances %}
+                <option value="{{ value }}" {% if account and account.normal_balance == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if action == 'Edit' %}
+        <div class="mb-6">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="is_active" {% if account.is_active %}checked{% endif %} class="w-4 h-4">
+                <span class="text-sm text-slate-700">Active</span>
+            </label>
+        </div>
+        {% endif %}
+
+        <div class="flex gap-3">
+            <button type="submit" class="btn btn-primary">{{ action }} Account</button>
+            <a href="{% url 'coa_list' %}" class="btn btn-ghost">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
