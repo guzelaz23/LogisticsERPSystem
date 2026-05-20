@@ -15,8 +15,11 @@ from .forms import PaymentForm, ExpenseForm, InvoiceForm
 
 @group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
 def invoice_list(request):
-    query  = request.GET.get('q', '')
-    export = request.GET.get('export', '')
+    query         = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    start_date    = request.GET.get('start_date', '')
+    end_date      = request.GET.get('end_date', '')
+    export        = request.GET.get('export', '')
 
     Invoice.objects.filter(
         payment_status='UNPAID',
@@ -28,6 +31,12 @@ def invoice_list(request):
         invoices = invoices.filter(
             Q(invoice_number__icontains=query) | Q(customer__name__icontains=query)
         )
+    if status_filter:
+        invoices = invoices.filter(payment_status=status_filter)
+    if start_date:
+        invoices = invoices.filter(created_at__date__gte=start_date)
+    if end_date:
+        invoices = invoices.filter(created_at__date__lte=end_date)
 
     if export == 'csv':
         response = HttpResponse(content_type='text/csv')
@@ -54,9 +63,12 @@ def invoice_list(request):
     invoices  = paginator.get_page(page)
 
     return render(request, 'billing/invoice_list.html', {
-        'invoices': invoices,
-        'query':    query,
-        'today':    timezone.now().date(),
+        'invoices':      invoices,
+        'query':         query,
+        'status_filter': status_filter,
+        'start_date':    start_date,
+        'end_date':      end_date,
+        'today':         timezone.now().date(),
     })
 
 @group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
@@ -119,6 +131,37 @@ def confirm_payment(request, invoice_id=None):
         for inv in payable
     })
     return render(request, 'billing/confirm_payment.html', {'form': form, 'invoices_json': invoices_json})
+
+
+@group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
+def payment_list(request):
+    from .models import PAYMENT_METHOD
+    start_date = request.GET.get('start_date', '')
+    end_date   = request.GET.get('end_date', '')
+    method     = request.GET.get('method', '')
+
+    payments = Payment.objects.select_related('invoice__customer').order_by('-payment_date')
+    if start_date:
+        payments = payments.filter(payment_date__gte=start_date)
+    if end_date:
+        payments = payments.filter(payment_date__lte=end_date)
+    if method:
+        payments = payments.filter(payment_method=method)
+
+    total = payments.aggregate(total=Sum('amount_paid'))['total'] or 0
+
+    paginator = Paginator(payments, 20)
+    page      = request.GET.get('page')
+    payments  = paginator.get_page(page)
+
+    return render(request, 'billing/payment_list.html', {
+        'payments':   payments,
+        'start_date': start_date,
+        'end_date':   end_date,
+        'method':     method,
+        'total':      total,
+        'methods':    PAYMENT_METHOD,
+    })
 
 
 @group_required('FINANCE')
