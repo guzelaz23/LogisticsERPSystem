@@ -547,12 +547,24 @@ def journal_entries(request):
     from general_ledger.models import JournalEntry
     from django.core.paginator import Paginator
 
-    entries   = JournalEntry.objects.prefetch_related('lines__account').order_by('-entry_date')
+    start_date = request.GET.get('start_date')
+    end_date   = request.GET.get('end_date')
+
+    entries = JournalEntry.objects.prefetch_related('lines__account').order_by('-entry_date')
+    if start_date:
+        entries = entries.filter(entry_date__gte=start_date)
+    if end_date:
+        entries = entries.filter(entry_date__lte=end_date)
+
     paginator = Paginator(entries, 20)
     page      = request.GET.get('page')
     entries   = paginator.get_page(page)
 
-    return render(request, 'reports/journal_entries.html', {'entries': entries})
+    return render(request, 'reports/journal_entries.html', {
+        'entries':    entries,
+        'start_date': start_date,
+        'end_date':   end_date,
+    })
 
 
 @login_required
