@@ -8,21 +8,27 @@ from django.contrib import messages
 from datetime import date as _date
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth, ExtractYear, ExtractMonth
-from shipments.models import Shipment
+from shipments.models import Shipment, SERVICE_CHOICES, STATUS_CHOICES
 from billing.models import Invoice
 
 
 @login_required
 def shipment_report(request):
-    start_date = request.GET.get('start_date')
-    end_date   = request.GET.get('end_date')
-    export     = request.GET.get('export', '')
+    start_date    = request.GET.get('start_date')
+    end_date      = request.GET.get('end_date')
+    service_type  = request.GET.get('service_type', '')
+    status_filter = request.GET.get('status', '')
+    export        = request.GET.get('export', '')
 
     shipments = Shipment.objects.select_related('customer').all()
     if start_date:
         shipments = shipments.filter(created_at__date__gte=start_date)
     if end_date:
         shipments = shipments.filter(created_at__date__lte=end_date)
+    if service_type:
+        shipments = shipments.filter(service_type=service_type)
+    if status_filter:
+        shipments = shipments.filter(status=status_filter)
 
     if export == 'csv':
         response = HttpResponse(content_type='text/csv')
@@ -56,6 +62,10 @@ def shipment_report(request):
         'status_counts':   status_counts,
         'start_date':      start_date,
         'end_date':        end_date,
+        'service_type':    service_type,
+        'status_filter':   status_filter,
+        'service_choices': SERVICE_CHOICES,
+        'status_choices':  STATUS_CHOICES,
         'total_shipments': total_shipments,
         'total_revenue':   total_revenue,
         'total_weight':    total_weight,
