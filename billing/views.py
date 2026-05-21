@@ -13,7 +13,7 @@ from django.utils import timezone
 from .models import Invoice, Payment
 from .forms import PaymentForm, ExpenseForm, InvoiceForm
 
-@group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
+@group_required('OPERATOR', 'MANAGEMENT')
 def invoice_list(request):
     query         = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
@@ -71,7 +71,7 @@ def invoice_list(request):
         'today':         timezone.now().date(),
     })
 
-@group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
+@group_required('OPERATOR', 'MANAGEMENT')
 def invoice_detail(request, pk):
     invoice = get_object_or_404(Invoice.objects.select_related('customer', 'shipment'), pk=pk)
     payments = invoice.payments.all()
@@ -81,12 +81,12 @@ def invoice_detail(request, pk):
         'today': timezone.now().date(),
     })
 
-@group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
+@group_required('OPERATOR', 'MANAGEMENT')
 def invoice_print(request, pk):
     invoice = get_object_or_404(Invoice.objects.select_related('customer', 'shipment'), pk=pk)
     return render(request, 'billing/invoice_print.html', {'invoice': invoice})
 
-@group_required('FINANCE')
+@group_required('OPERATOR')
 def confirm_payment(request, invoice_id=None):
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -133,7 +133,7 @@ def confirm_payment(request, invoice_id=None):
     return render(request, 'billing/confirm_payment.html', {'form': form, 'invoices_json': invoices_json})
 
 
-@group_required('FINANCE', 'MANAGEMENT', 'SALES_OPS')
+@group_required('OPERATOR', 'MANAGEMENT')
 def payment_list(request):
     from .models import PAYMENT_METHOD
     start_date = request.GET.get('start_date', '')
@@ -164,7 +164,7 @@ def payment_list(request):
     })
 
 
-@group_required('FINANCE')
+@group_required('OPERATOR')
 def record_expense(request):
     if request.method == 'POST':
         form = ExpenseForm(request.POST)
@@ -200,7 +200,7 @@ def record_expense(request):
                     )
 
                 messages.success(request, f"Expense recorded: {entry.entry_number}")
-                return redirect('journal_entries')
+                return redirect('operational_journal_entries')
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"Expense GL posting failed: {e}", exc_info=True)
@@ -211,7 +211,7 @@ def record_expense(request):
     return render(request, 'billing/record_expense.html', {'form': form})
 
 
-@group_required('FINANCE')
+@group_required('OPERATOR')
 def invoice_create(request):
     from shipments.models import Shipment
 
