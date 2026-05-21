@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from ais_finalproject.utils import group_required
 from datetime import date as _date
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth, ExtractYear, ExtractMonth
@@ -12,7 +13,7 @@ from shipments.models import Shipment, SERVICE_CHOICES, STATUS_CHOICES
 from billing.models import Invoice
 
 
-@login_required
+@group_required('MANAGEMENT')
 def shipment_report(request):
     start_date    = request.GET.get('start_date')
     end_date      = request.GET.get('end_date')
@@ -72,7 +73,7 @@ def shipment_report(request):
     })
 
 
-@login_required
+@group_required('MANAGEMENT')
 def revenue_report(request):
     start_date = request.GET.get('start_date')
     end_date   = request.GET.get('end_date')
@@ -158,7 +159,7 @@ def revenue_report(request):
     return render(request, 'reports/revenue_report.html', context)
 
 
-@login_required
+@group_required('MANAGEMENT')
 def trial_balance(request):
     from general_ledger.models import ChartOfAccount
     from django.db.models import Sum, Q
@@ -194,7 +195,7 @@ def trial_balance(request):
     })
 
 
-@login_required
+@group_required('MANAGEMENT')
 def income_statement(request):
     from general_ledger.models import ChartOfAccount
     from django.db.models import Sum, Q
@@ -288,7 +289,7 @@ def income_statement(request):
     })
 
 
-@login_required
+@group_required('MANAGEMENT')
 def balance_sheet(request):
     from general_ledger.models import ChartOfAccount
     from django.db.models import Sum, Q
@@ -387,7 +388,7 @@ def balance_sheet(request):
     })
 
 
-@login_required
+@group_required('MANAGEMENT')
 def ar_aging(request):
     from django.utils import timezone
     from django.db.models import Prefetch
@@ -450,7 +451,7 @@ def ar_aging(request):
     })
 
 
-@login_required
+@group_required('MANAGEMENT')
 def cash_flow_statement(request):
     from general_ledger.models import JournalEntryLine
     from django.db.models import Sum, Q
@@ -542,8 +543,8 @@ def cash_flow_statement(request):
     })
 
 
-@login_required
-def journal_entries(request):
+@group_required('MANAGEMENT')
+def general_entries(request):
     from general_ledger.models import JournalEntry
     from django.core.paginator import Paginator
 
@@ -560,7 +561,7 @@ def journal_entries(request):
     page      = request.GET.get('page')
     entries   = paginator.get_page(page)
 
-    return render(request, 'reports/journal_entries.html', {
+    return render(request, 'reports/general_entries.html', {
         'entries':    entries,
         'start_date': start_date,
         'end_date':   end_date,
@@ -573,13 +574,38 @@ def delete_journal_entry(request, pk):
 
     if not request.user.is_superuser:
         messages.error(request, "Only administrators can delete journal entries.")
-        return redirect('journal_entries')
+        return redirect('general_entries')
 
     if request.method != 'POST':
-        return redirect('journal_entries')
+        return redirect('general_entries')
 
     entry = get_object_or_404(JournalEntry, pk=pk)
     entry_number = entry.entry_number
     entry.delete()
     messages.success(request, f"Journal entry {entry_number} has been deleted.")
-    return redirect('journal_entries')
+    return redirect('general_entries')
+
+
+@group_required('OPERATOR')
+def operational_journal_entries(request):
+    from general_ledger.models import JournalEntry
+    from django.core.paginator import Paginator
+
+    start_date = request.GET.get('start_date')
+    end_date   = request.GET.get('end_date')
+
+    entries = JournalEntry.objects.prefetch_related('lines__account').order_by('-entry_date')
+    if start_date:
+        entries = entries.filter(entry_date__gte=start_date)
+    if end_date:
+        entries = entries.filter(entry_date__lte=end_date)
+
+    paginator = Paginator(entries, 20)
+    page      = request.GET.get('page')
+    entries   = paginator.get_page(page)
+
+    return render(request, 'reports/operational_journal_entries.html', {
+        'entries':    entries,
+        'start_date': start_date,
+        'end_date':   end_date,
+    })
