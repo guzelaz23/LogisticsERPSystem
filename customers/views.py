@@ -6,7 +6,7 @@ from ais_finalproject.utils import group_required
 from .models import Customer
 from .forms import CustomerForm
 
-@group_required('SALES_OPS', 'FINANCE', 'MANAGEMENT')
+@group_required('OPERATOR', 'MANAGEMENT')
 def customer_list(request):
     query = request.GET.get('q', '')
     if query:
@@ -20,7 +20,7 @@ def customer_list(request):
 
     return render(request, 'customers/list.html', {'customers': customers, 'query': query})
 
-@group_required('SALES_OPS')
+@group_required('OPERATOR')
 def customer_add(request):
     if request.method == 'POST':
         form = CustomerForm(request.POST)
@@ -33,13 +33,13 @@ def customer_add(request):
     
     return render(request, 'customers/add.html', {'form': form})
 
-@group_required('SALES_OPS', 'FINANCE', 'MANAGEMENT')
+@group_required('OPERATOR', 'MANAGEMENT')
 def customer_detail(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     shipments = customer.shipment_set.all()[:10]
     return render(request, 'customers/detail.html', {'customer': customer, 'shipments': shipments})
 
-@group_required('SALES_OPS')
+@group_required('OPERATOR')
 def customer_toggle_active(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
