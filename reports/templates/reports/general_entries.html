@@ -1,7 +1,7 @@
 {% extends 'ais_finalproject/base.html' %}
 {% load custom_filters %}
-{% block title %}Journal Entries - SAP Express{% endblock %}
-{% block breadcrumb %}Journal Entries{% endblock %}
+{% block title %}General Entries - SAP Express{% endblock %}
+{% block breadcrumb %}General Entries{% endblock %}
 
 {% block content %}
 <style>
@@ -14,14 +14,11 @@
         .card {
             box-shadow: none !important;
             border: 1px solid #ddd !important;
-            break-inside: auto !important;  /* allow table to split across pages */
+            break-inside: auto !important;
         }
-        tr { break-inside: avoid; }        /* but keep each row intact */
-        /* Show all detail lines when printing */
+        tr { break-inside: avoid; }
         tr[x-show], tr[x-cloak] { display: table-row !important; }
-        /* Hide the expand/collapse toggle column */
         th.je-toggle-col, td.je-toggle-col { display: none !important; }
-        /* Status: plain text in print */
         .je-status-badge { display: none !important; }
         .je-status-text  { display: inline !important; }
     }
@@ -30,7 +27,7 @@
 
 <div class="print-only" style="display:none; text-align:center; margin-bottom:20px;">
     <h2 style="font-size:20px; font-weight:800; margin:0 0 4px; color:#0f2a4a;">SAP Express Logistic</h2>
-    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">General Journal (Journal Entries)</h3>
+    <h3 style="font-size:15px; font-weight:600; margin:0 0 6px;">General Entries</h3>
     <p style="font-size:12px; color:#555; margin:2px 0;">Page {{ entries.number }} of {{ entries.paginator.num_pages }} ({{ entries.paginator.count }} entries total)</p>
     <p style="font-size:11px; color:#888; margin:2px 0;">Generated: {% now "d M Y, H:i" %}</p>
     <hr style="border:none; border-top:2px solid #0f2a4a; margin:14px 0 20px;">
@@ -38,7 +35,7 @@
 
 <div class="mb-5 flex items-center justify-between no-print">
     <div>
-        <h1 class="text-xl font-extrabold text-slate-800">Journal Entries</h1>
+        <h1 class="text-xl font-extrabold text-slate-800">General Entries</h1>
         <p class="text-sm text-slate-500 mt-0.5">All posted accounting journal entries</p>
     </div>
     <button onclick="window.print()" class="btn btn-primary no-print">
@@ -61,7 +58,7 @@
         </div>
         <button type="submit" class="btn btn-primary">Filter</button>
         {% if start_date or end_date %}
-        <a href="{% url 'journal_entries' %}" class="btn btn-ghost">Clear</a>
+        <a href="{% url 'general_entries' %}" class="btn btn-ghost">Clear</a>
         {% endif %}
     </form>
 </div>
@@ -144,7 +141,7 @@
         {% empty %}
         <tbody>
             <tr>
-                <td colspan="8" class="text-center text-slate-400 py-8">No journal entries yet. Generate an invoice or confirm a payment to create entries.</td>
+                <td colspan="8" class="text-center text-slate-400 py-8">No entries yet. Generate an invoice or confirm a payment to create entries.</td>
             </tr>
         </tbody>
         {% endfor %}
