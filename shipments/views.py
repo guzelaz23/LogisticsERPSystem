@@ -1,7 +1,6 @@
 import logging
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
 from django.utils import timezone
@@ -15,7 +14,7 @@ from .forms import ShipmentForm
 from customers.models import Customer
 from billing.models import Invoice
 
-@login_required
+@group_required('OPERATOR', 'MANAGEMENT')
 def shipment_list(request):
     query = request.GET.get('q', '')
     if query:
@@ -29,7 +28,7 @@ def shipment_list(request):
     
     return render(request, 'shipments/list.html', {'shipments': shipments, 'query': query})
 
-@group_required('SALES_OPS')
+@group_required('OPERATOR')
 def shipment_add(request):
     if request.method == 'POST':
         form = ShipmentForm(request.POST)
@@ -71,7 +70,7 @@ def shipment_add(request):
         
     return render(request, 'shipments/add.html', {'form': form, 'customers_data': customers_data})
 
-@login_required
+@group_required('OPERATOR', 'MANAGEMENT')
 def shipment_detail(request, pk):
     shipment = get_object_or_404(Shipment.objects.select_related('customer', 'invoice'), pk=pk)
     return render(request, 'shipments/detail.html', {'shipment': shipment})
@@ -84,7 +83,7 @@ VALID_TRANSITIONS = {
     'RETURNED':  set(),
 }
 
-@group_required('SALES_OPS')
+@group_required('OPERATOR')
 def shipment_edit(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
     if shipment.status != 'PENDING':
@@ -103,7 +102,7 @@ def shipment_edit(request, pk):
     return render(request, 'shipments/edit.html', {'form': form, 'shipment': shipment})
 
 
-@group_required('SALES_OPS')
+@group_required('OPERATOR')
 def shipment_update_status(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
     if request.method == 'POST':
@@ -172,7 +171,7 @@ def _handle_return_reversal(shipment, user):
 
 SERVICE_REVENUE_MAP = {'REG': '4100', 'EXP': '4200', 'SDS': '4300', 'CAR': '4400'}
 
-@group_required('FINANCE')
+@group_required('OPERATOR')
 def generate_invoice(request, pk):
     shipment = get_object_or_404(Shipment, pk=pk)
 
