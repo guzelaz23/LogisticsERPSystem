@@ -1,6 +1,6 @@
-# SAP Express — Logistics ERP Solution
+# Logistics ERP Solution
 
-A web-based **Accounting Information System** built for logistics companies. SAP Express manages the full operational and financial cycle, from shipment tracking to automated double-entry bookkeeping, with zero manual journal entries required.
+A web-based **Accounting Information System** built for logistics companies. This Logistics manages the full operational and financial cycle, from shipment tracking to automated double-entry bookkeeping, with zero manual journal entries required.
 
 **Live Demo:** [guzelaz23.pythonanywhere.com](https://guzelaz23.pythonanywhere.com)
 
@@ -49,7 +49,7 @@ Information System 24 — President University
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend:** Python / Django
 - **Frontend:** HTML, CSS, JavaScript
